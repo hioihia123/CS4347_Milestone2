@@ -244,7 +244,7 @@ public class Login extends javax.swing.JFrame {
                     if (obj.getString("status").equalsIgnoreCase("success")) {
                         failedAttempts = 0;
 
-                        String libName = obj.getString("lib_Name");
+                        String libName = obj.getString("lib_name");
                         String libEmail = obj.getString("email");
                         String libID = obj.getString("lib_id");
 
@@ -514,7 +514,7 @@ public class Login extends javax.swing.JFrame {
     }
     private String sendLoginRequest(String email, String password) throws IOException {
         // Update  PHP endpoint URL
-        String urlString = "https://cm8tes.com/lib_login.php";
+        String urlString = "http://cm8tes.com/CS4347_Project_Folder/lib_login.php";
         String urlParameters = "email=" + URLEncoder.encode(email, "UTF-8") +
                 "&passWord=" + URLEncoder.encode(password, "UTF-8");
 

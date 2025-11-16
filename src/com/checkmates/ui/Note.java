@@ -72,6 +72,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.checkmates.model.Professor;
+import com.checkmates.model.Librarian;
 import com.checkmates.ui.components.ModernButton;
 import com.checkmates.ui.components.ModernScrollBarUI;
 import com.checkmates.ui.components.WrapLayout;
@@ -82,7 +83,7 @@ import com.checkmates.ui.components.FancyHoverButton;
  * with push-pins on the right side and an "Add Note" button.
  */
 public class Note {
-    private static Professor professor;
+    private static Librarian librarian;
     private static int totalNote = 0;
     private static int noteIndex = 0;
     
@@ -100,12 +101,12 @@ public class Note {
         noteIndex++;
     }
     
-    public static void setProfessor(Professor prof){
-        professor = prof;
+    public static void setProfessor(Librarian lib){
+        librarian = lib;
     }
     
-    public static String getProfessorID(){
-        return professor.getProfessorID();
+    public static String getLibID(){
+        return librarian.getLibID();
     }
     public static void launch() {
     SwingUtilities.invokeLater(() -> {
@@ -163,9 +164,9 @@ public class Note {
 
 
         //Initial load on startup
-        if (professor != null) {
+        if (librarian != null) {
             fetchAndDisplayNotes(
-                professor.getProfessorID(),
+                librarian.getLibID(),
                 notesContainer,
                 notes
             );
@@ -218,9 +219,9 @@ public class Note {
                 Note.incrementNoteIndex();
 
             }
-            System.out.println("Saving note for professor ID → " + professor.getProfessorID());
+            System.out.println("Saving note for professor ID → " + librarian.getLibID());
 
-            saveNoteToDatabase(professor.getProfessorID(), inputArea.getText().trim());
+            saveNoteToDatabase(librarian.getLibID(), inputArea.getText().trim());
             
             
             dialog.dispose();
@@ -537,7 +538,7 @@ class RealisticNotePanel extends JPanel {
         xButton.addActionListener(e -> {
             Container parent = RealisticNotePanel.this.getParent();
             if (parent != null) {
-                Note.deleteNote(Note.getProfessorID(), text);
+                Note.deleteNote(Note.getLibID(), text);
                 Note.decrementNoteIndex();
                 parent.remove(RealisticNotePanel.this);
                 parent.revalidate();

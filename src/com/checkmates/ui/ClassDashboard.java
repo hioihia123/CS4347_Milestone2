@@ -89,12 +89,13 @@ import javax.swing.table.TableRowSorter;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import com.checkmates.model.Professor;
+import com.checkmates.model.Librarian;
+
 import com.checkmates.ui.components.FancyHoverButton;
 
 public class ClassDashboard extends JFrame {
 
-    private Professor professor;
+    private Librarian lib;
     private JTable classesTable;
     private boolean oldTimeyMode;
     private JTextField searchField;
@@ -116,8 +117,8 @@ public class ClassDashboard extends JFrame {
     private Color modernAccentColor = new Color(100, 149, 237);
     private Color modernHighlightColor = new Color(200, 220, 255);
 
-    public ClassDashboard(Professor professor) {
-        this(professor, false);
+    public ClassDashboard(Librarian lib) {
+        this(lib, false);
     }
     
 
@@ -155,10 +156,10 @@ public class ClassDashboard extends JFrame {
             JOptionPane.showMessageDialog(this, message, title, messageType);
         }
     }
-    public ClassDashboard(Professor professor, boolean oldTimeyMode) {
-        this.professor = professor;
+    public ClassDashboard(Librarian lib, boolean oldTimeyMode) {
+        this.lib = lib;
         this.oldTimeyMode = oldTimeyMode;
-        setTitle("Class Dashboard for " + professor.getProfessorName());
+        setTitle("Class Dashboard for " + lib.getLibName());
         setSize(1200, 800);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -237,7 +238,7 @@ public class ClassDashboard extends JFrame {
         topPanel.setOpaque(false);
         topPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, typewriterInk));
 
-        JLabel greetingLabel = new JLabel("Classes for Professor " + professor.getProfessorName());
+        JLabel greetingLabel = new JLabel("Classes for Professor " + lib.getLibName());
         greetingLabel.setFont(titleFont);
         greetingLabel.setForeground(typewriterInk);
         topPanel.add(greetingLabel);
@@ -296,7 +297,7 @@ public class ClassDashboard extends JFrame {
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         topPanel.setBackground(Color.WHITE);
 
-        JLabel greetingLabel = new JLabel("Classes for Professor " + professor.getProfessorName());
+        JLabel greetingLabel = new JLabel("Classes for Professor " + lib.getLibName());
         greetingLabel.setFont(modernTitleFont);
         greetingLabel.setForeground(modernTextColor);
         topPanel.add(greetingLabel);
@@ -656,7 +657,7 @@ public class ClassDashboard extends JFrame {
                 String urlParameters = String.format(
                         "class_id=%d&professor_id=%s&class=%s&section=%s&expiration=%d",
                         classId,
-                        URLEncoder.encode(professor.getProfessorID(), StandardCharsets.UTF_8),
+                        URLEncoder.encode(lib.getLibName(), StandardCharsets.UTF_8),
                         URLEncoder.encode(newClassName, StandardCharsets.UTF_8),
                         URLEncoder.encode(newSection, StandardCharsets.UTF_8),
                         expirationMinutes
@@ -975,7 +976,7 @@ public class ClassDashboard extends JFrame {
         new Thread(() -> {
             try {
                 String urlString = "http://cm8tes.com/createClass.php";
-                String urlParameters = "professor_id=" + URLEncoder.encode(professor.getProfessorID(), "UTF-8") +
+                String urlParameters = "professor_id=" + URLEncoder.encode(lib.getLibID(), "UTF-8") +
                         "&class=" + URLEncoder.encode(className, "UTF-8") +
                         "&section=" + URLEncoder.encode(section, "UTF-8") +
                         "&expiration=" + expirationMinutes +
@@ -1192,7 +1193,7 @@ public class ClassDashboard extends JFrame {
             try {
                 String urlString = "http://cm8tes.com/deleteClass.php";
                 String urlParameters = "class_id=" + classId +
-                        "&professor_id=" + URLEncoder.encode(professor.getProfessorID(), "UTF-8");
+                        "&professor_id=" + URLEncoder.encode(lib.getLibID(), "UTF-8");
 
                 URI uri = new URI(urlString);
                 URL url = uri.toURL();
@@ -1274,7 +1275,7 @@ public class ClassDashboard extends JFrame {
     private void loadClassesForProfessor() {
         try {
             String urlString = "http://cm8tes.com/getClasses.php?professor_id=" +
-                    URLEncoder.encode(professor.getProfessorID(), StandardCharsets.UTF_8);
+                    URLEncoder.encode(lib.getLibID(), StandardCharsets.UTF_8);
 
             URI uri = new URI(urlString);
             URL url = uri.toURL();
@@ -1379,7 +1380,7 @@ public class ClassDashboard extends JFrame {
     }
 
     public static void main(String[] args) {
-        Professor dummyProf = new Professor("Dr. Smith", "drsmith@example.com", "DR12345");
+        Librarian dummyProf = new Librarian("Dr. Smith", "drsmith@example.com", "DR12345");
         SwingUtilities.invokeLater(() -> {
             ClassDashboard dashboard = new ClassDashboard(dummyProf, false);
             dashboard.setVisible(true);

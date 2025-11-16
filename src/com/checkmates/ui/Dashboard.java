@@ -169,7 +169,7 @@ public class Dashboard extends javax.swing.JFrame {
     }
 
     private void openNoteStyleWindow() {
-         Note.setProfessor(professor);
+         Note.setProfessor(librarian);
          Note.launch();  // Calls static method from other class
     }
 
@@ -339,7 +339,7 @@ public class Dashboard extends javax.swing.JFrame {
         chatButton.setFont(new Font("Helvetica Neue", Font.BOLD, 25));
         
         chatButton.addActionListener(e -> {
-            profChat chatFeatures = new profChat(Dashboard.this, professor);
+            profChat chatFeatures = new profChat(Dashboard.this, librarian);
             chatFeatures.setVisible(true);
         });
                 

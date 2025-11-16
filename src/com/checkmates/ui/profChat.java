@@ -183,7 +183,7 @@ public class profChat extends JDialog {
         );
         if (choice == JOptionPane.YES_OPTION) {
             // (A) Delete from DB
-            deleteProfessorFromDatabase(this.professor.getProfessorID(), selectedProf.getProfessorID());
+            deleteProfessorFromDatabase(this.lib.getLibID(), selectedLib.getLibID());
             // (B) Remove from combo box
             professorComboBox.removeItem(sel);
             // (C) Clear chat area if they were selected
@@ -212,7 +212,7 @@ public class profChat extends JDialog {
             );
             
             if(confirm == JOptionPane.YES_OPTION){
-                deleteChatMessages(this.professor.getProfessorID(), selectedProf.getProfessorID(),chatArea);
+                deleteChatMessages(this.lib.getLibID(), selectedProf.getLibID(),chatArea);
             }
             
         });
@@ -244,7 +244,7 @@ public class profChat extends JDialog {
        sendButton.setToolTipText("Send message");
        sendButton.addActionListener(evt -> {
             String text = inputField.getText().trim(); if (text.isEmpty()) return;
-            otherProfessors sel = (otherProfessors)professorComboBox.getSelectedItem();
+            otherLibs sel = (otherLibs)professorComboBox.getSelectedItem();
 
             // 1) encrypt
             Map<String,String> enc;
@@ -268,8 +268,8 @@ public class profChat extends JDialog {
                 JSONObject resp = httpPost(
                   "https://cm8tes.com/postMessages.php",
                   Map.of(
-                    "sender_id",   professor.getProfessorID(),
-                    "receiver_id", sel.professor.getProfessorID(),
+                    "sender_id",   lib.getLibID(),
+                    "receiver_id", sel.lib.getLibID(),
                     "cipher",      c,
                     "iv",          iv
                   )
@@ -301,9 +301,9 @@ public class profChat extends JDialog {
        Executors.newSingleThreadScheduledExecutor()
   .scheduleAtFixedRate(() -> {
         SwingUtilities.invokeLater(() -> {
-          otherProfessors sel = (otherProfessors) professorComboBox.getSelectedItem();
+          otherLibs sel = (otherLibs) professorComboBox.getSelectedItem();
           if (sel != null) {
-            loadHistory(sel.professor.getProfessorID());
+            loadHistory(sel.lib.getLibID());
           }
         });
       }, 1, 1, TimeUnit.SECONDS);
@@ -324,12 +324,12 @@ public class profChat extends JDialog {
 
     // Duplicate check: return only if actually find a match
     for (int i = 0; i < professorComboBox.getItemCount(); i++) {
-        otherProfessors existing = (otherProfessors) professorComboBox.getItemAt(i);
-        String existingId = existing.professor.getProfessorID();
+        otherLibs existing = (otherLibs) professorComboBox.getItemAt(i);
+        String existingId = existing.lib.getLibID();
         if (existingId != null && existingId.equals(idToAdd)) {
             JOptionPane.showMessageDialog(
                 profChat.this,
-                "Professor \"" + existing.professor.getProfessorName() +"\n with id:  "+idToAdd + "\" is already in your list.",
+                "Professor \"" + existing.lib.getLibID() +"\n with id:  "+idToAdd + "\" is already in your list.",
                 "Already Added",
                 JOptionPane.INFORMATION_MESSAGE
             );
@@ -338,7 +338,7 @@ public class profChat extends JDialog {
     }
 
     // If the code get here, no duplicate was found. Now fetch from PHP.
-    Professor foundProfessor = fetchProfessorById(idToAdd);
+    Librarian foundProfessor = fetchProfessorById(idToAdd);
     if (foundProfessor == null) {
         JOptionPane.showMessageDialog(
             profChat.this,
@@ -348,13 +348,13 @@ public class profChat extends JDialog {
         );
         return;
     }
-    saveContactToDatabase(professor.getProfessorID(), foundProfessor.getProfessorID(), foundProfessor);
+    saveContactToDatabase(lib.getLibID(), foundProfessor.getLibID(), foundProfessor);
 
     
 }
 
     
-    private static Professor fetchProfessorById(String professorId){
+    private static Librarian fetchProfessorById(String professorId){
             try{
                 String urlString ="http://cm8tes.com/getProfessors.php?professor_id=" +
                        URLEncoder.encode(String.valueOf(professorId), StandardCharsets.UTF_8.toString());
@@ -389,7 +389,7 @@ public class profChat extends JDialog {
                     //System.out.println("Parsed id:   " + id);
                     //System.out.println("Parsed name: " + name);
 
-                    Professor fetchedProfessor = new Professor(name, null, id);
+                    Librarian fetchedProfessor = new Librarian(name, null, id);
                     //System.out.println("professor.getProfessorName(): " + fetchedProfessor.getProfessorName());
 
                     return fetchedProfessor;
@@ -406,7 +406,7 @@ public class profChat extends JDialog {
             
    }
             
-    private void saveContactToDatabase(String owner_id, String contact_id, Professor foundProfessor) {
+    private void saveContactToDatabase(String owner_id, String contact_id, Librarian foundProfessor) {
         System.out.println("DEBUG: owner_id=" + owner_id + ", contact_id=" + contact_id);
         if (owner_id == null || contact_id == null) {
         System.err.printf("Cannot save contact – missing ID(s): owner_id=%s, contact_id=%s%n",
@@ -460,7 +460,7 @@ public class profChat extends JDialog {
                 SwingUtilities.invokeLater(() -> {
                     if ("success".equalsIgnoreCase(status)) {
                         professorComboBox.addItem(
-                            new otherProfessors(foundProfessor, foundProfessor.getProfessorName())
+                            new otherLibs(foundProfessor, foundProfessor.getLibName())
                         );
                         JOptionPane.showMessageDialog(
                             this,
@@ -502,7 +502,7 @@ public class profChat extends JDialog {
             HttpURLConnection conn = null;
             try {
                 // Build URL for fetching contacts
-                String ownerId = URLEncoder.encode(professor.getProfessorID(), StandardCharsets.UTF_8.name());
+                String ownerId = URLEncoder.encode(lib.getLibID(), StandardCharsets.UTF_8.name());
                 URL url = new URL("https://cm8tes.com/loadContacts.php?owner_id=" + ownerId);
                 conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
@@ -547,8 +547,8 @@ public class profChat extends JDialog {
                                 String id = obj.optString("professor_id", null);
                                 String name = obj.optString("professorName", "");
                                 if (id != null) {
-                                    Professor p = new Professor(name, null, id);
-                                    professorComboBox.addItem(new otherProfessors(p, name));
+                                    Librarian p = new Librarian(name, null, id);
+                                    professorComboBox.addItem(new otherLibs(p, name));
                                 }
                             }
                         });

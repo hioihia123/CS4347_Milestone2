@@ -90,7 +90,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.checkmates.model.Professor;
+import com.checkmates.model.Librarian;
 import com.checkmates.ui.components.ModernScrollBarUI;
 import com.checkmates.util.AESUtil;
 import com.checkmates.ui.components.FancyHoverButton;
@@ -100,13 +100,13 @@ public class profChat extends JDialog {
     private final JTextArea chatArea;
     private final JTextField inputField;
     private final JButton sendButton;
-    private final Professor professor;
-    public final JComboBox<otherProfessors> professorComboBox;
+    private final Librarian lib;
+    public final JComboBox<otherLibs> professorComboBox;
     
     
-    public profChat(JFrame parent, Professor professor){
+    public profChat(JFrame parent, Librarian lib){
         super(parent, "Messenger", true);
-        this.professor = professor;
+        this.lib = lib;
         setLayout(new BorderLayout(10,10));
         setSize(600,500);
         setLocationRelativeTo(parent);
@@ -130,8 +130,8 @@ public class profChat extends JDialog {
         professorComboBox.setBackground(Color.WHITE);
         professorComboBox.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
-              otherProfessors sel = (otherProfessors)e.getItem();
-              loadHistory(sel.professor.getProfessorID());
+              otherLibs sel = (otherLibs)e.getItem();
+              loadHistory(sel.lib.getLibID());
             }
         });
 
@@ -165,14 +165,14 @@ public class profChat extends JDialog {
        removeButton.setBackground(Color.WHITE);
        removeButton.setFocusPainted(false);
        removeButton.addActionListener(ev -> {
-        otherProfessors sel = (otherProfessors) professorComboBox.getSelectedItem();
-        System.out.println("Selected professor id: " + sel.professor.getProfessorID()); //Null
+        otherLibs sel = (otherLibs) professorComboBox.getSelectedItem();
+        System.out.println("Selected professor id: " + sel.lib.getLibID()); //Null
         
         if (sel == null) return;
         
         //Extract the Professor object and its ID
-        Professor selectedProf = sel.professor;
-        System.out.println("Selected professor id: " + selectedProf.getProfessorID()); //Null
+        Librarian selectedLib = sel.lib;
+        System.out.println("Selected professor id: " + selectedLib.getLibID()); //Null
 
         
         int choice = JOptionPane.showConfirmDialog(
@@ -199,11 +199,11 @@ public class profChat extends JDialog {
        deleteConversationButton.setBackground(Color.WHITE);
        deleteConversationButton.setFocusPainted(false);
        deleteConversationButton.addActionListener(ev -> {
-            otherProfessors sel = (otherProfessors) professorComboBox.getSelectedItem();
+            otherLibs sel = (otherLibs) professorComboBox.getSelectedItem();
             if (sel == null) return;
         
-            //Extract the Professor object and its ID
-            Professor selectedProf = sel.professor;
+            //Extract the Librarian object and its ID
+            Librarian selectedProf = sel.lib;
             int confirm = JOptionPane.showConfirmDialog(
                 null,
                 "Are you sure want to delete this conversation",
@@ -721,12 +721,12 @@ private static void deleteChatMessages(String sender_id, String receiver_id, JTe
 }
     
         //Inner class to hold other professor details for the combo Box
-        public static class otherProfessors{
+        public static class otherLibs{
             final String display;
-            final Professor professor;
+            final Librarian lib;
             
-            public otherProfessors(Professor professor, String display){
-                this.professor = professor;
+            public otherLibs(Librarian lib, String display){
+                this.lib = lib;
                 this.display = display;
             }
             
@@ -785,7 +785,7 @@ private JSONObject httpPost(String urlStr, Map<String,String> params) throws IOE
 private void loadHistory(String otherId) {
   new Thread(() -> {
     try {
-      String u1 = URLEncoder.encode(professor.getProfessorID(),"UTF-8");
+      String u1 = URLEncoder.encode(lib.getLibID(),"UTF-8");
       String u2 = URLEncoder.encode(otherId, "UTF-8");
       String json = httpGet("https://cm8tes.com/getMessages.php?user1=" + u1 + "&user2=" + u2);
 
@@ -818,7 +818,7 @@ private void loadHistory(String otherId) {
         UIManager.put("ScrollBar.trackArc", 999);
         UIManager.put("ScrollBar.showButtons", false);
 
-        Professor professor = new Professor("Dr Smith", "example@123.com", "dsmith");
+        Librarian lib = new Librarian("Dr Smith", "example@123.com", "dsmith");
         // Prepare the objects that ChatDialog needs:
         //    A parent frame 
         JFrame parentFrame = null; // 
@@ -827,7 +827,7 @@ private void loadHistory(String otherId) {
 
         // Launch the dialog on the EDT
         SwingUtilities.invokeLater(() -> {
-          profChat chat = new profChat(parentFrame, professor);
+          profChat chat = new profChat(parentFrame, lib);
           chat.setVisible(true);
         });
   }

@@ -57,6 +57,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.checkmates.model.Professor;
+import com.checkmates.model.Librarian;
+
 import com.checkmates.ai.ChatProcess;
 import com.checkmates.ui.components.HintTextField;
 import com.checkmates.ui.components.FancyHoverButton;
@@ -68,12 +70,12 @@ public class ChatDialog extends JDialog {
     private final JTextField inputField;
     private final JButton sendButton;
     private int classId; // Current selected class ID
-    private final Professor professor;
+    private final Librarian librarian;
     public final JComboBox<ClassItem> classComboBox; // To let professor choose a class
 
-    public ChatDialog(JFrame parent, Professor professor) {
+    public ChatDialog(JFrame parent, Librarian librarian){
         super(parent, "Saki Chat", true);
-        this.professor = professor;
+        this.librarian = librarian;
         setLayout(new BorderLayout(10, 10));
         setSize(600, 500);
         setLocationRelativeTo(parent);
@@ -124,7 +126,7 @@ public class ChatDialog extends JDialog {
     new SwingWorker<String,Void>() {
         @Override
         protected String doInBackground() {
-            return ChatProcess.summarizeAllClasses(professor.getProfessorID());
+            return ChatProcess.summarizeAllClasses(librarian.getLibID());
         }
         @Override
         protected void done() {
@@ -150,7 +152,7 @@ public class ChatDialog extends JDialog {
            new SwingWorker<String,Void>(){
                @Override
                protected String doInBackground() {
-                  return ChatProcess.giveTips(professor.getProfessorID());
+                  return ChatProcess.giveTips(librarian.getLibID());
                }
                @Override
                protected void done() {
@@ -220,7 +222,7 @@ public class ChatDialog extends JDialog {
                 String urlString = "";
                 try {
                     urlString = "http://cm8tes.com/getClasses.php?professor_id=" +
-                            URLEncoder.encode(professor.getProfessorID(), StandardCharsets.UTF_8.toString());
+                            URLEncoder.encode(librarian.getLibID(), StandardCharsets.UTF_8.toString());
                     URL url = new URL(urlString);
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestMethod("GET");
@@ -370,7 +372,7 @@ public class ChatDialog extends JDialog {
     UIManager.put("ScrollBar.trackArc", 999);
     UIManager.put("ScrollBar.showButtons", false);
 
-    Professor professor = new Professor("Dr Smith", "example@123.com", "dsmith");
+    Librarian librarian = new Librarian("Dr Smith", "example@123.com", "dsmith");
     // Prepare the objects that ChatDialog needs:
     //    a) A parent frame 
     JFrame parentFrame = null; // or: new Dashboard();
@@ -380,7 +382,7 @@ public class ChatDialog extends JDialog {
 
     // Launch the dialog on the EDT
     SwingUtilities.invokeLater(() -> {
-      ChatDialog chat = new ChatDialog(parentFrame, professor);
+      ChatDialog chat = new ChatDialog(parentFrame, librarian);
       chat.setVisible(true);
     });
   }

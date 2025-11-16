@@ -112,6 +112,7 @@ import org.json.JSONObject;
  */
 import com.checkmates.ai.ChatProcess;
 import com.checkmates.model.Professor;
+import com.checkmates.model.Librarian;
 import com.checkmates.main.Login;
 import com.checkmates.ui.components.FancyHoverButton;
 import com.checkmates.ui.components.FancyHoverButton2;
@@ -126,8 +127,8 @@ import com.checkmates.ui.components.GradientPanel;
 
 
 public class Dashboard extends javax.swing.JFrame {
-
-    private Professor professor;  // Store professor-specific info
+ 
+    private Librarian librarian;  // Store professor-specific info
     private ClassDashboard dashboard;
     private JCheckBox chkIP;
     boolean isIPRTurnOn;
@@ -149,8 +150,8 @@ public class Dashboard extends javax.swing.JFrame {
     /**
      * Creates new form Dashboard with a Professor object.
      */
-    public Dashboard(Professor professor) {
-        this.professor = professor;
+    public Dashboard(Librarian librarian) {
+        this.librarian = librarian;
         setBackground(Color.WHITE);
         initComponents();
         noteButton = new ModernButton("\u270e", true);
@@ -183,21 +184,21 @@ public class Dashboard extends javax.swing.JFrame {
         );
 
         // --- Existing header labels ---
-        JLabel greetingLabel = new JLabel("Hello, " + professor.getProfessorName() + "!");
+        JLabel greetingLabel = new JLabel("Hello, " + librarian.getLibName() + "!");
         greetingLabel.setFont(new Font("Roboto", Font.BOLD, 24));
         greetingLabel.setForeground(new Color(50, 50, 50));
         greetingLabel.setHorizontalAlignment(SwingConstants.LEFT);
 
-        JLabel professorIDLabel = new JLabel("Professor ID: " + professor.getProfessorID());
-        professorIDLabel.setFont(new Font("Roboto", Font.PLAIN, 18));
-        professorIDLabel.setForeground(new Color(80, 80, 80));
-        professorIDLabel.setHorizontalAlignment(SwingConstants.LEFT);
+        JLabel librarianIDLabel = new JLabel("Librarian ID: " + librarian.getLibID());
+        librarianIDLabel.setFont(new Font("Roboto", Font.PLAIN, 18));
+        librarianIDLabel.setForeground(new Color(80, 80, 80));
+        librarianIDLabel.setHorizontalAlignment(SwingConstants.LEFT);
 
         // Create a header panel for the greeting and professor ID, stacked vertically
         JPanel headerPanel = new JPanel(new GridLayout(2, 1));
         headerPanel.setOpaque(false);
         headerPanel.add(greetingLabel);
-        headerPanel.add(professorIDLabel);
+        headerPanel.add(librarianIDLabel);
 
         // --- Top bar: left side (logo & header) and right side (buttons) ---
         JPanel topBar = new JPanel(new BorderLayout());
@@ -226,7 +227,7 @@ public class Dashboard extends javax.swing.JFrame {
         topBar.add(rightPanel, BorderLayout.EAST);
 
         // "What's on your mind?" label
-        JLabel questionHeader = new JLabel("What's on your mind, " + professor.getProfessorName() +"?");
+        JLabel questionHeader = new JLabel("What's on your mind, " + librarian.getLibName() +"?");
         questionHeader.setFont(new Font("Helvetica Neue", Font.BOLD, 36));
         questionHeader.setForeground(new Color(50, 50, 50));
 
@@ -276,7 +277,7 @@ public class Dashboard extends javax.swing.JFrame {
         viewClassButton.setMaximumSize(new Dimension(180,50));
         viewClassButton.addActionListener(e -> {
             // Create a new ClassDashboard window with modern style (false)
-            ClassDashboard classDash = new ClassDashboard(professor, false);
+            ClassDashboard classDash = new ClassDashboard(librarian, false);
             classDash.setVisible(true);
         });
 
@@ -287,7 +288,7 @@ public class Dashboard extends javax.swing.JFrame {
         AIbutton.setPreferredSize(new Dimension(180,50));
         AIbutton.setMaximumSize(new Dimension(180,50));
         AIbutton.addActionListener(e -> {
-            ChatDialog chatDialog = new ChatDialog(Dashboard.this, professor);
+            ChatDialog chatDialog = new ChatDialog(Dashboard.this, librarian);
             chatDialog.setVisible(true);
         });
         
@@ -295,7 +296,7 @@ public class Dashboard extends javax.swing.JFrame {
         emailButton.setFont(new Font ("Helvetica Neueu", Font.BOLD, 24));
         emailButton.setPreferredSize(new Dimension(180,50));
         emailButton.setMaximumSize(new Dimension(180, 50));
-        emailButton.addActionListener(e -> sendEmail(professor.getProfessorID()));
+        emailButton.addActionListener(e -> sendEmail(librarian.getLibID()));
 
         // Add spacing before adding the additional button
         additionalButtonsPanel.add(Box.createHorizontalStrut(20)); // 20-pixel space
@@ -500,11 +501,11 @@ public class Dashboard extends javax.swing.JFrame {
         });
         
         FancyHoverButton2 oldTimeyButton = new FancyHoverButton2("Old-Timey Style");
-        oldTimeyButton.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        oldTimeyButton.addActionListener(e -> {
-            this.dispose();
-            new oldDashboard(professor).setVisible(true);
-        });
+//        oldTimeyButton.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+//        oldTimeyButton.addActionListener(e -> {
+//            this.dispose();
+//            new oldDashboard(professor).setVisible(true);
+//        });
 
         topPanel.add(logOffButton);
         topPanel.add(oldTimeyButton);
@@ -668,7 +669,7 @@ public class Dashboard extends javax.swing.JFrame {
                 String checkInUrl = "tinyurl.com/02221732";
 
                 // Save the class information and generate QR code
-                saveClassToDatabase(professor.getProfessorID(), className, section, passcode, expirationMinutes);
+                saveClassToDatabase(librarian.getLibID(), className, section, passcode, expirationMinutes);
                 Image qrImage = generateQRCodeImage(checkInUrl, 200, 200);
                 showQRCodeDialog(qrImage, checkInUrl, passcode, expirationMinutes);
 
@@ -936,10 +937,10 @@ private String prefix64(String rawIp) {
         //</editor-fold>//comment
 
         // Create a Professors object
-        Professor prof = new Professor("Professor Name", "test@gmail.com", "it's not a game. I am not a robot AI challenging you");
+        Librarian lib = new Librarian("Professor Name", "test@gmail.com", "it's not a game. I am not a robot AI challenging you");
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new Dashboard(prof).setVisible(true);
+                new Dashboard(lib).setVisible(true);
             }
         });
     }

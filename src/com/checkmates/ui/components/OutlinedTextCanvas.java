@@ -41,7 +41,7 @@ public class OutlinedTextCanvas extends Canvas {
         setBackground(Color.WHITE);
         
         // Define the text and font
-        String text = "CheckMates";
+        String text = "BookBuddy";
         Font font = new Font("Microsoft Sans Serif", Font.BOLD, 36);
         g2.setFont(font);
         

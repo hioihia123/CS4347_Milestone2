@@ -68,7 +68,7 @@ import org.json.JSONObject;
 
 import com.checkmates.ui.components.OutlinedTextCanvas;
 import com.checkmates.ui.Dashboard;
-import com.checkmates.model.Professor;
+import com.checkmates.model.Librarian;
 import com.checkmates.ui.components.FancyHoverButton;
 import com.checkmates.ui.SignUp;
 /**
@@ -90,7 +90,7 @@ public class Login extends javax.swing.JFrame {
 
         // 1) Load the background image from GitHub
         try {
-            URL backgroundUrl = new URL("https://raw.githubusercontent.com/hioihia123/CheckMates_Application/refs/heads/master/background10.png");
+            URL backgroundUrl = new URL("https://raw.githubusercontent.com/hioihia123/CheckMates_Application/refs/heads/master/Untitled.png");
             backgroundImage = new ImageIcon(ImageIO.read(backgroundUrl));
         } catch (IOException e) {
             e.printStackTrace();
@@ -192,7 +192,7 @@ public class Login extends javax.swing.JFrame {
         jLabel1.setBackground(new Color(255, 255, 255));
         jLabel1.setFont(new Font("Maku", 3, 18)); // NOI18N
         jLabel1.setForeground(new Color(0, 0, 0));
-        jLabel1.setText("Let's CheckMates");
+        jLabel1.setText("Click. Track. Ta-da!");
 
         jLabel3.setBackground(new Color(255, 255, 255));
         jLabel3.setFont(new Font("Microsoft Sans Serif", 1, 24)); // NOI18N
@@ -244,14 +244,14 @@ public class Login extends javax.swing.JFrame {
                     if (obj.getString("status").equalsIgnoreCase("success")) {
                         failedAttempts = 0;
 
-                        String professorName = obj.getString("professorName");
-                        String profEmail = obj.getString("email");
-                        String profID = obj.getString("professor_id");
+                        String libName = obj.getString("lib_Name");
+                        String libEmail = obj.getString("email");
+                        String libID = obj.getString("lib_id");
 
-                        Professor professor = new Professor(professorName, profEmail, profID);
+                        Librarian librarian = new Librarian(libName, libEmail, libID);
 
                         SwingUtilities.invokeLater(() -> {
-                            new Dashboard(professor).setVisible(true);
+                            new Dashboard(librarian).setVisible(true);
                             Login.this.dispose();
                         });
                     } else {
@@ -357,16 +357,16 @@ public class Login extends javax.swing.JFrame {
                     // Reset failed attempts on success
                     failedAttempts = 0;
 
-                    String professorName = obj.getString("professorName");
-                    String profEmail = obj.getString("email");
-                    String profID = obj.getString("professor_id");
+                    String libName = obj.getString("lib_name");
+                    String libEmail = obj.getString("email");
+                    String libID = obj.getString("lib_id");
 
                     // Create a Professor instance
-                    Professor professor = new Professor(professorName, profEmail, profID);
+                   Librarian librarian = new Librarian(libName, libEmail, libID);
 
                     // Open the Dashboard window and pass the professor's info
                     SwingUtilities.invokeLater(() -> {
-                        new Dashboard(professor).setVisible(true);
+                        new Dashboard(librarian).setVisible(true);
                         Login.this.dispose();
                     });
                 } else {
@@ -514,7 +514,7 @@ public class Login extends javax.swing.JFrame {
     }
     private String sendLoginRequest(String email, String password) throws IOException {
         // Update  PHP endpoint URL
-        String urlString = "https://cm8tes.com/login.php";
+        String urlString = "https://cm8tes.com/lib_login.php";
         String urlParameters = "email=" + URLEncoder.encode(email, "UTF-8") +
                 "&passWord=" + URLEncoder.encode(password, "UTF-8");
 

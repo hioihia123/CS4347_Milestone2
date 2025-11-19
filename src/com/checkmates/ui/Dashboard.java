@@ -129,7 +129,7 @@ import com.checkmates.ui.components.GradientPanel;
 public class Dashboard extends javax.swing.JFrame {
  
     private Librarian librarian;  // Store professor-specific info
-    private ClassDashboard dashboard;
+    private ManageBooksDashboard dashboard;
     private JCheckBox chkIP;
     boolean isIPRTurnOn;
     private String collectedIPv6 = "";
@@ -242,8 +242,8 @@ public class Dashboard extends javax.swing.JFrame {
         fancyButton.setPreferredSize(new Dimension(180, 50)); // size as needed
         // Add an action listener to open the create class dialog
         fancyButton.addActionListener(e -> {
-            // Create a new ClassDashboard window with modern style (false)
-            ClassDashboard classDash = new ClassDashboard(librarian, false);
+            // Create a new ManageBooksDashboard window with modern style (false)
+            ManageBooksDashboard classDash = new ManageBooksDashboard(librarian);
             classDash.setVisible(true);
         });
 

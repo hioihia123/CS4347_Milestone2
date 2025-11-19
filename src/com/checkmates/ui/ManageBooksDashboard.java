@@ -84,6 +84,13 @@ public class ManageBooksDashboard extends JFrame {
         customizeTable();
 
         JScrollPane scrollPane = new JScrollPane(booksTable);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder()); // Remove border
+        scrollPane.getViewport().setBackground(Color.WHITE);
+        
+        // Use your existing ModernScrollBarUI from Note.java/Dashboard.java
+        // If you don't have the class file, define it as an inner class (see below)
+        scrollPane.getVerticalScrollBar().setUI(new ModernScrollBarUI());
+        scrollPane.getHorizontalScrollBar().setUI(new ModernScrollBarUI());
 
         // --- Bottom Panel (Search & Buttons) ---
         JPanel bottomContainer = new JPanel(new BorderLayout());
@@ -135,7 +142,7 @@ public class ManageBooksDashboard extends JFrame {
         
         FancyHoverButton2 checkoutButton = new FancyHoverButton2("Checkout Book");
         checkoutButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        checkoutButton.addActionListener(e -> deleteSelectedBook());
+        checkoutButton.addActionListener(e -> checkoutBook());
         buttonPanel.add(checkoutButton);
         
         FancyHoverButton2 checkinButton = new FancyHoverButton2("Checkin Book");
@@ -143,7 +150,7 @@ public class ManageBooksDashboard extends JFrame {
         checkinButton.addActionListener(e -> deleteSelectedBook());
         buttonPanel.add(checkinButton);
 
-        FancyHoverButton refreshButton = new FancyHoverButton("Refresh");
+        FancyHoverButton refreshButton = new FancyHoverButton("\u27F3");
         refreshButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
         refreshButton.addActionListener(e -> loadAllBooks());
         buttonPanel.add(refreshButton);
@@ -411,45 +418,55 @@ public class ManageBooksDashboard extends JFrame {
     }
 
     private void customizeTable() {
-        booksTable.setFont(modernFont);
-        booksTable.setForeground(modernTextColor);
-        booksTable.setRowHeight(30);
-        booksTable.setSelectionBackground(modernHighlightColor);
-        booksTable.setSelectionForeground(modernTextColor);
-        booksTable.setGridColor(new Color(220, 220, 220));
-        booksTable.setBackground(Color.WHITE);
+        // 1. Fonts and Colors
+        booksTable.setFont(new Font("Segoe UI", Font.PLAIN, 14)); // Cleaner font
+        booksTable.setForeground(new Color(50, 50, 50)); // Dark grey text
+        booksTable.setRowHeight(40); // Taller rows for a card-like feel
+        booksTable.setShowVerticalLines(false); // Cleaner look
+        booksTable.setShowHorizontalLines(true);
+        booksTable.setGridColor(new Color(230, 230, 230)); // Very light grey lines
+        booksTable.setIntercellSpacing(new Dimension(0, 0));
+        booksTable.setSelectionBackground(new Color(232, 240, 254)); // Soft blue selection
+        booksTable.setSelectionForeground(new Color(50, 50, 50));
 
+        // 2. Header Styling
+        JTableHeader header = booksTable.getTableHeader();
+        header.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        header.setForeground(new Color(80, 80, 80));
+        header.setBackground(Color.WHITE); // White header
+        header.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(230, 230, 230))); // Bottom border only
+        header.setPreferredSize(new Dimension(header.getWidth(), 40)); // Taller header
+
+        // 3. Alternating Row Colors (Zebra Striping)
         booksTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
-            final Color alternateColor = new Color(250, 250, 250);
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value,
                                                            boolean isSelected, boolean hasFocus,
                                                            int row, int column) {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                
+                // Add padding to cell content
+                setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
+
                 if (!isSelected) {
-                    c.setBackground(row % 2 == 0 ? Color.WHITE : alternateColor);
+                    c.setBackground(Color.WHITE); // Keep it simple/white
                 } else {
-                    c.setBackground(modernHighlightColor);
+                    c.setBackground(new Color(232, 240, 254));
                 }
                 return c;
             }
         });
-
-        JTableHeader header = booksTable.getTableHeader();
-        header.setFont(modernFont.deriveFont(Font.BOLD));
-        header.setForeground(modernTextColor);
-        header.setBackground(modernPanelColor);
-        header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(200, 200, 200)));
     }
     
     private void customizeTableColumns() {
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        centerRenderer.setHorizontalAlignment(SwingConstants.LEFT);
         
         // Center ISBN and Availability
         if(booksTable.getColumnCount() >= 4) {
             booksTable.getColumnModel().getColumn(0).setCellRenderer(centerRenderer); // ISBN
-            booksTable.getColumnModel().getColumn(3).setCellRenderer(centerRenderer); // Availability
+            booksTable.getColumnModel().getColumn(2).setCellRenderer(centerRenderer); // Author
+            booksTable.getColumnModel().getColumn(3).setCellRenderer(centerRenderer); //Availability
         }
     }
 
@@ -545,6 +562,133 @@ public class ManageBooksDashboard extends JFrame {
         dialog.add(panel);
         dialog.setVisible(true);
     }
+    
+    private void checkoutBook() {
+        JDialog dialog = new JDialog(this, "Checkout Book", true);
+        dialog.setSize(450, 300);
+        dialog.setLocationRelativeTo(this);
+        
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(Color.WHITE);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        
+        JTextField isbnField = new JTextField(20);
+        JTextField borrowerIdField = new JTextField(20); 
+
+        addFormRow(panel, gbc, 0, "ISBN:", isbnField);
+        addFormRow(panel, gbc, 1, "Borrower ID:", borrowerIdField);
+
+        JButton saveButton = createModernButton("Checkout");
+        gbc.gridx = 1; gbc.gridy = 3;
+        panel.add(saveButton, gbc);
+
+        saveButton.addActionListener(e -> {
+            String isbn = isbnField.getText().trim();
+            String borrowerId = borrowerIdField.getText().trim();
+
+            if (isbn.isEmpty() ||  borrowerId.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "All fields are required.");
+                return;
+            }
+
+            sendToCheckout(isbn, borrowerId, lib.getLibID()); // Create this PHP
+
+            dialog.dispose();
+        });
+
+        dialog.add(panel);
+        dialog.setVisible(true);
+    }
+    //Checkout helper
+    private void sendToCheckout(String isbn, String borrowerId, String libId) {
+        new Thread(() -> {
+            try {
+                String urlString = "http://cm8tes.com/CS4347_Project_Folder/checkoutBook.php";
+                String params = "isbn=" + URLEncoder.encode(isbn, "UTF-8") +
+                                "&Card_id=" + URLEncoder.encode(borrowerId, "UTF-8") +
+                                "&lib_id_checkout=" + URLEncoder.encode(libId, "UTF-8");
+
+                // 1. Send Request and GET THE RESPONSE STRING
+                String response = postDataWithResponse(urlString, params);
+
+                // 2. Parse JSON
+                JSONObject json = new JSONObject(response);
+                String status = json.optString("status");
+                String message = json.optString("message");
+
+                // 3. Update UI on Event Dispatch Thread
+                SwingUtilities.invokeLater(() -> {
+                    if ("success".equalsIgnoreCase(status)) {
+                        showModernDialog("Success", message, true);
+                        loadAllBooks(); // Refresh table only on success
+                    } else {
+                        showModernDialog("Error", message, false);
+                    }
+                });
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                SwingUtilities.invokeLater(() -> 
+                    showModernDialog("Connection Error", e.getMessage(), false));
+            }
+        }).start();
+    }
+
+   
+    static class ModernScrollBarUI extends javax.swing.plaf.basic.BasicScrollBarUI {
+        private final int THUMB_SIZE = 60;
+
+        @Override
+        protected Dimension getMaximumThumbSize() {
+            if (scrollbar.getOrientation() == JScrollBar.VERTICAL) {
+                return new Dimension(0, THUMB_SIZE);
+            }
+            return new Dimension(THUMB_SIZE, 0);
+        }
+
+        @Override
+        protected Dimension getMinimumThumbSize() {
+            if (scrollbar.getOrientation() == JScrollBar.VERTICAL) {
+                return new Dimension(0, THUMB_SIZE);
+            }
+            return new Dimension(THUMB_SIZE, 0);
+        }
+
+        @Override
+        protected JButton createDecreaseButton(int orientation) {
+            return new JButton() {
+                @Override public Dimension getPreferredSize() { return new Dimension(0, 0); }
+            };
+        }
+
+        @Override
+        protected JButton createIncreaseButton(int orientation) {
+            return new JButton() {
+                @Override public Dimension getPreferredSize() { return new Dimension(0, 0); }
+            };
+        }
+
+        @Override
+        protected void paintTrack(Graphics g, JComponent c, Rectangle trackBounds) {
+            // Transparent track
+        }
+
+        @Override
+        protected void paintThumb(Graphics g, JComponent c, Rectangle thumbBounds) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            
+            // Grey rounded thumb
+            g2.setColor(new Color(200, 200, 200));
+            g2.fillRoundRect(thumbBounds.x + 2, thumbBounds.y + 2, 
+                           thumbBounds.width - 4, thumbBounds.height - 4, 
+                           8, 8);
+            g2.dispose();
+        }
+    }
+    
     // Main for testing
     public static void main(String[] args) {
         try { UIManager.setLookAndFeel(new FlatLightLaf()); } catch (Exception e) {}

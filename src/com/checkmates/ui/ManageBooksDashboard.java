@@ -135,12 +135,12 @@ public class ManageBooksDashboard extends JFrame {
         
         FancyHoverButton2 checkoutButton = new FancyHoverButton2("Checkout Book");
         checkoutButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        checkoutButton.addActionListener(e -> deleteSelectedBook());
+        checkoutButton.addActionListener(e -> checkoutBook());
         buttonPanel.add(checkoutButton);
         
         FancyHoverButton2 checkinButton = new FancyHoverButton2("Checkin Book");
         checkinButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        checkinButton.addActionListener(e -> deleteSelectedBook());
+        checkinButton.addActionListener(e -> checkinBook());
         buttonPanel.add(checkinButton);
 
         FancyHoverButton refreshButton = new FancyHoverButton("Refresh");
@@ -322,6 +322,341 @@ public class ManageBooksDashboard extends JFrame {
         }
     }
 
+    // --- Book Loans (FR 3) ---
+    
+    /**
+     * Checkout a book - FR 3 requirement
+     * Allows selecting a book and providing Borrower Card_id to checkout
+     */
+    private void checkoutBook() {
+        int row = booksTable.getSelectedRow();
+        if (row == -1) {
+            JOptionPane.showMessageDialog(this, 
+                "Please select a book to checkout.", 
+                "No Selection", 
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        // Get book information
+        String isbn = (String) booksTable.getValueAt(row, 0);
+        String title = (String) booksTable.getValueAt(row, 1);
+        String availability = (String) booksTable.getValueAt(row, 3);
+        
+        // Check if book is available
+        if ("OUT".equals(availability)) {
+            JOptionPane.showMessageDialog(this, 
+                "This book is already checked out and not available.", 
+                "Book Not Available", 
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        // Create checkout dialog
+        JDialog dialog = new JDialog(this, "Checkout Book", true);
+        dialog.setSize(450, 200);
+        dialog.setLocationRelativeTo(this);
+        
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(Color.WHITE);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        
+        // Display book info
+        JLabel bookInfoLabel = new JLabel("<html><b>Book:</b> " + title + "<br><b>ISBN:</b> " + isbn + "</html>");
+        bookInfoLabel.setFont(modernFont);
+        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
+        panel.add(bookInfoLabel, gbc);
+        
+        // Borrower Card_id input
+        gbc.gridwidth = 1;
+        gbc.gridy = 1;
+        gbc.gridx = 0;
+        JLabel cardLabel = new JLabel("Borrower Card ID:");
+        cardLabel.setFont(modernFont);
+        panel.add(cardLabel, gbc);
+        
+        gbc.gridx = 1;
+        JTextField cardIdField = new JTextField(20);
+        cardIdField.setFont(modernFont);
+        panel.add(cardIdField, gbc);
+        
+        // Buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(Color.WHITE);
+        
+        FancyHoverButton checkoutBtn = new FancyHoverButton("Checkout");
+        checkoutBtn.setFont(modernFont);
+        checkoutBtn.addActionListener(e -> {
+            String cardId = cardIdField.getText().trim();
+            if (cardId.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Please enter Borrower Card ID.", 
+                    "Missing Information", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            dialog.dispose();
+            performCheckout(isbn, cardId);
+        });
+        
+        FancyHoverButton cancelBtn = new FancyHoverButton("Cancel");
+        cancelBtn.setFont(modernFont);
+        cancelBtn.addActionListener(e -> dialog.dispose());
+        
+        buttonPanel.add(checkoutBtn);
+        buttonPanel.add(cancelBtn);
+        
+        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2;
+        panel.add(buttonPanel, gbc);
+        
+        dialog.add(panel);
+        dialog.setVisible(true);
+    }
+    
+    /**
+     * Perform checkout operation - sends request to backend
+     * @param isbn Book ISBN
+     * @param cardId Borrower Card_id
+     */
+    private void performCheckout(String isbn, String cardId) {
+        new Thread(() -> {
+            try {
+                String urlString = "http://cm8tes.com/CS4347_Project_Folder/checkoutBook.php";
+                String params = "isbn=" + URLEncoder.encode(isbn, "UTF-8") +
+                              "&card_id=" + URLEncoder.encode(cardId, "UTF-8");
+                
+                String response = postDataWithResponse(urlString, params);
+                JSONObject json = new JSONObject(response);
+                String status = json.optString("status");
+                String message = json.optString("message");
+                
+                SwingUtilities.invokeLater(() -> {
+                    if ("success".equalsIgnoreCase(status)) {
+                        showModernDialog("Checkout Successful", message, true);
+                        loadAllBooks(); // Refresh to show updated availability
+                    } else {
+                        showModernDialog("Checkout Failed", message, false);
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+                SwingUtilities.invokeLater(() -> 
+                    showModernDialog("Error", "Network error: " + e.getMessage(), false));
+            }
+        }).start();
+    }
+    
+    /**
+     * Checkin books - FR 3 requirement
+     * Allows searching for loans by ISBN, Card_id, or Borrower name
+     * Then select 1-3 loans to check in
+     */
+    private void checkinBook() {
+        // Create checkin dialog
+        JDialog dialog = new JDialog(this, "Check In Books", true);
+        dialog.setSize(900, 650);
+        dialog.setLocationRelativeTo(this);
+        
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(Color.WHITE);
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        // Search panel
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        searchPanel.setBackground(Color.WHITE);
+        JLabel searchLabel = new JLabel("Search by ISBN, Card ID, or Borrower Name:");
+        searchLabel.setFont(modernFont);
+        JTextField searchField = new JTextField(30);
+        searchField.setFont(modernFont);
+        FancyHoverButton searchButton = new FancyHoverButton("Search");
+        searchButton.setFont(modernFont);
+        
+        searchPanel.add(searchLabel);
+        searchPanel.add(searchField);
+        searchPanel.add(searchButton);
+        
+        // Results table
+        JTable loansTable = new JTable();
+        loansTable.setFont(modernFont);
+        loansTable.setRowHeight(25);
+        loansTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        loansTable.getTableHeader().setFont(modernFont.deriveFont(Font.BOLD));
+        JScrollPane scrollPane = new JScrollPane(loansTable);
+        
+        // Status label
+        JLabel statusLabel = new JLabel("Enter search criteria and click Search");
+        statusLabel.setFont(modernFont);
+        statusLabel.setForeground(new Color(100, 100, 100));
+        
+        // Button panel
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        buttonPanel.setBackground(Color.WHITE);
+        
+        FancyHoverButton checkinButton = new FancyHoverButton("Check In Selected (1-3)");
+        checkinButton.setFont(modernFont);
+        checkinButton.setEnabled(false);
+        
+        FancyHoverButton closeButton = new FancyHoverButton("Close");
+        closeButton.setFont(modernFont);
+        closeButton.addActionListener(e -> dialog.dispose());
+        
+        buttonPanel.add(checkinButton);
+        buttonPanel.add(closeButton);
+        
+        // Search button action
+        searchButton.addActionListener(e -> {
+            String query = searchField.getText().trim();
+            if (query.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, 
+                    "Please enter search criteria.", 
+                    "Empty Search", 
+                    JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            statusLabel.setText("Searching...");
+            searchLoans(query, loansTable, statusLabel, checkinButton);
+        });
+        
+        // Checkin button action
+        checkinButton.addActionListener(e -> {
+            int[] selectedRows = loansTable.getSelectedRows();
+            if (selectedRows.length == 0 || selectedRows.length > 3) {
+                JOptionPane.showMessageDialog(dialog, 
+                    "Please select 1-3 loans to check in.", 
+                    "Invalid Selection", 
+                    JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            
+            // Get loan IDs
+            ArrayList<String> loanIds = new ArrayList<>();
+            for (int row : selectedRows) {
+                int modelRow = loansTable.convertRowIndexToModel(row);
+                String loanId = (String) loansTable.getModel().getValueAt(modelRow, 0);
+                loanIds.add(loanId);
+            }
+            
+            performCheckin(loanIds, dialog);
+        });
+        
+        // Enable checkin button when selection changes
+        loansTable.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                int selectedCount = loansTable.getSelectedRowCount();
+                checkinButton.setEnabled(selectedCount >= 1 && selectedCount <= 3);
+            }
+        });
+        
+        mainPanel.add(searchPanel, BorderLayout.NORTH);
+        mainPanel.add(statusLabel, BorderLayout.CENTER);
+        mainPanel.add(scrollPane, BorderLayout.CENTER);
+        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+        
+        dialog.add(mainPanel);
+        dialog.setVisible(true);
+    }
+    
+    /**
+     * Search for loans by ISBN, Card_id, or Borrower name
+     */
+    private void searchLoans(String query, JTable table, JLabel statusLabel, JButton checkinButton) {
+        new Thread(() -> {
+            try {
+                String urlString = "http://cm8tes.com/CS4347_Project_Folder/searchLoans.php?query=" + 
+                                 URLEncoder.encode(query, StandardCharsets.UTF_8.name());
+                String response = fetchUrl(urlString);
+                
+                JSONObject json = new JSONObject(response);
+                if ("success".equalsIgnoreCase(json.optString("status"))) {
+                    JSONArray loansArray = json.getJSONArray("loans");
+                    
+                    String[] columnNames = {"Loan ID", "ISBN", "Title", "Card ID", "Borrower Name", "Date Out", "Due Date"};
+                    ArrayList<String[]> rowData = new ArrayList<>();
+                    
+                    for (int i = 0; i < loansArray.length(); i++) {
+                        JSONObject obj = loansArray.getJSONObject(i);
+                        rowData.add(new String[]{
+                            obj.optString("Loan_id"),
+                            obj.optString("Isbn"),
+                            obj.optString("Title"),
+                            obj.optString("Card_id"),
+                            obj.optString("Bname"),
+                            obj.optString("Date_out"),
+                            obj.optString("Due_date")
+                        });
+                    }
+                    
+                    SwingUtilities.invokeLater(() -> {
+                        DefaultTableModel model = new DefaultTableModel(
+                            rowData.toArray(new String[0][]), columnNames) {
+                            @Override
+                            public boolean isCellEditable(int row, int column) {
+                                return false;
+                            }
+                        };
+                        table.setModel(model);
+                        
+                        // Center align certain columns
+                        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+                        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+                        table.getColumnModel().getColumn(0).setCellRenderer(centerRenderer); // Loan ID
+                        table.getColumnModel().getColumn(1).setCellRenderer(centerRenderer); // ISBN
+                        table.getColumnModel().getColumn(3).setCellRenderer(centerRenderer); // Card ID
+                        
+                        if (rowData.isEmpty()) {
+                            statusLabel.setText("No active loans found matching: \"" + query + "\"");
+                        } else {
+                            statusLabel.setText("Found " + rowData.size() + " active loan(s). Select 1-3 to check in.");
+                        }
+                        checkinButton.setEnabled(false);
+                    });
+                } else {
+                    SwingUtilities.invokeLater(() -> {
+                        statusLabel.setText("Error: " + json.optString("message"));
+                        table.setModel(new DefaultTableModel());
+                    });
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                SwingUtilities.invokeLater(() -> {
+                    statusLabel.setText("Error searching loans: " + e.getMessage());
+                    table.setModel(new DefaultTableModel());
+                });
+            }
+        }).start();
+    }
+    
+    /**
+     * Perform checkin operation for selected loans
+     */
+    private void performCheckin(ArrayList<String> loanIds, JDialog dialog) {
+        new Thread(() -> {
+            try {
+                String urlString = "http://cm8tes.com/CS4347_Project_Folder/checkinBooks.php";
+                String params = "loan_ids=" + URLEncoder.encode(String.join(",", loanIds), StandardCharsets.UTF_8.name());
+                
+                String response = postDataWithResponse(urlString, params);
+                JSONObject json = new JSONObject(response);
+                String status = json.optString("status");
+                String message = json.optString("message");
+                
+                SwingUtilities.invokeLater(() -> {
+                    if ("success".equalsIgnoreCase(status)) {
+                        showModernDialog("Check In Successful", message, true);
+                        dialog.dispose();
+                        loadAllBooks(); // Refresh book availability
+                    } else {
+                        showModernDialog("Check In Failed", message, false);
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+                SwingUtilities.invokeLater(() -> 
+                    showModernDialog("Error", "Network error: " + e.getMessage(), false));
+            }
+        }).start();
+    }
+
     // --- Helper Methods ---
 
     private void sendBookData(String isbn, String title, String authorId) {
@@ -461,6 +796,7 @@ public class ManageBooksDashboard extends JFrame {
         return button;
     }
     
+    // search feature (FR 2)
     private void updateFilter() {
         String text = searchField.getText();
         if (rowSorter != null) {

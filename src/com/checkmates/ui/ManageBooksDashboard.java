@@ -562,7 +562,7 @@ public class ManageBooksDashboard extends JFrame {
         dialog.add(panel);
         dialog.setVisible(true);
     }
-    //kkkkjklljkklkllk
+    //kkkkjklljkklkllkkl;
     private void checkoutBook() {
         JDialog dialog = new JDialog(this, "Checkout Book", true);
         dialog.setSize(450, 300);

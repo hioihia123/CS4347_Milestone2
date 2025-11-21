@@ -129,7 +129,7 @@ import com.checkmates.ui.components.GradientPanel;
 public class Dashboard extends javax.swing.JFrame {
  
     private Librarian librarian;  // Store professor-specific info
-    private ClassDashboard dashboard;
+    private ManageBooksDashboard dashboard;
     private JCheckBox chkIP;
     boolean isIPRTurnOn;
     private String collectedIPv6 = "";
@@ -237,11 +237,15 @@ public class Dashboard extends javax.swing.JFrame {
         questionHeaderPanel.add(questionHeader);
 
         // Create the fancy hover button
-        FancyHoverButton fancyButton = new FancyHoverButton("Create Class");
+        FancyHoverButton fancyButton = new FancyHoverButton("Manage");
         fancyButton.setFont(new Font("Helvetica Neue", Font.BOLD, 24));
         fancyButton.setPreferredSize(new Dimension(180, 50)); // size as needed
         // Add an action listener to open the create class dialog
-        fancyButton.addActionListener(e -> openCreateClassDialog());
+        fancyButton.addActionListener(e -> {
+            // Create a new ManageBooksDashboard window with modern style (false)
+            ManageBooksDashboard classDash = new ManageBooksDashboard(librarian);
+            classDash.setVisible(true);
+        });
 
         // place this button in the same topSection panel, below the question header
         JPanel topSection = new JPanel();
@@ -270,16 +274,7 @@ public class Dashboard extends javax.swing.JFrame {
         additionalButtonsPanel.setLayout(new BoxLayout(additionalButtonsPanel, BoxLayout.X_AXIS));
         additionalButtonsPanel.setOpaque(false);
 
-        //create a "View Class" button - explicitly set to modern style (false)
-        FancyHoverButton viewClassButton = new FancyHoverButton("Records");
-        viewClassButton.setFont(new Font("Helvetica Neue", Font.BOLD, 24));
-        viewClassButton.setPreferredSize(new Dimension(180, 50));
-        viewClassButton.setMaximumSize(new Dimension(180,50));
-        viewClassButton.addActionListener(e -> {
-            // Create a new ClassDashboard window with modern style (false)
-            ClassDashboard classDash = new ClassDashboard(librarian, false);
-            classDash.setVisible(true);
-        });
+  
 
 
         //create a "Saki" button for Saki AI Agent
@@ -299,8 +294,6 @@ public class Dashboard extends javax.swing.JFrame {
         emailButton.addActionListener(e -> sendEmail(librarian.getLibID()));
 
         // Add spacing before adding the additional button
-        additionalButtonsPanel.add(Box.createHorizontalStrut(20)); // 20-pixel space
-        additionalButtonsPanel.add(viewClassButton);
        
         additionalButtonsPanel.add(Box.createHorizontalStrut(20));
         additionalButtonsPanel.add(AIbutton);
@@ -365,7 +358,7 @@ public class Dashboard extends javax.swing.JFrame {
 
         bottomPanel.add(ipStatusLabel, BorderLayout.WEST);
         
-        JLabel textLogoLabel = new JLabel("CheckMates Version 1.0");
+        JLabel textLogoLabel = new JLabel("BookBuddy Version 1.0");
         textLogoLabel.setFont(new Font("Roboto", Font.PLAIN, 12));
         textLogoLabel.setForeground(new Color(50, 50, 50));
       
@@ -385,8 +378,6 @@ public class Dashboard extends javax.swing.JFrame {
                     new GuideStep(fancyButton,    
                    "1) Click here to create class to take attendance."),
                         
-                    new GuideStep(viewClassButton,    
-                   "2) Click here to view created classes and attendance records."),
                     
                     new GuideStep(AIbutton,    
                    "3) Click here to chat with Saki."),

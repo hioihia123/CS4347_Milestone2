@@ -963,7 +963,7 @@ public class AttendanceDashboard extends JFrame {
     }
 
     private JButton createModernButton(String text) {
-        ClassDashboard.FancyHoverButton button = new ClassDashboard.FancyHoverButton(text);
+        FancyHoverButton button = new FancyHoverButton(text);
         button.setFont(modernFont);
         button.setForeground(Color.WHITE);
         button.setBorder(BorderFactory.createEmptyBorder(8, 20, 8, 20));

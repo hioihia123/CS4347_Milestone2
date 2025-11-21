@@ -457,7 +457,7 @@ public class ManageBooksDashboard extends JFrame {
             }
         });
     }
-    
+    //dsadadadsada
     private void customizeTableColumns() {
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(SwingConstants.LEFT);
@@ -562,7 +562,7 @@ public class ManageBooksDashboard extends JFrame {
         dialog.add(panel);
         dialog.setVisible(true);
     }
-    
+    //kkkkjklljkklkllkkl;
     private void checkoutBook() {
         JDialog dialog = new JDialog(this, "Checkout Book", true);
         dialog.setSize(450, 300);

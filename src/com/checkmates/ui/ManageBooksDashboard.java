@@ -20,6 +20,8 @@ import javax.swing.RowFilter;
 import com.checkmates.model.Librarian;
 import com.checkmates.ui.components.FancyHoverButton;
 import com.checkmates.ui.components.FancyHoverButton2;
+import com.checkmates.ui.ManageLoanDashboard;
+
 
 import com.formdev.flatlaf.FlatLightLaf;
 
@@ -147,7 +149,7 @@ public class ManageBooksDashboard extends JFrame {
         
         FancyHoverButton2 checkinButton = new FancyHoverButton2("Checkin Book");
         checkinButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        checkinButton.addActionListener(e -> deleteSelectedBook());
+        checkinButton.addActionListener(e -> new ManageLoanDashboard().setVisible(true));
         buttonPanel.add(checkinButton);
 
         FancyHoverButton refreshButton = new FancyHoverButton("\u27F3");
@@ -174,7 +176,6 @@ public class ManageBooksDashboard extends JFrame {
     private void loadAllBooks() {
         new Thread(() -> {
             try {
-                // You need to create getBooks.php that returns all books with status
                 String urlString = "http://cm8tes.com/CS4347_Project_Folder/getBooks.php"; 
                 String response = fetchUrl(urlString);
                 updateTableWithJson(response);

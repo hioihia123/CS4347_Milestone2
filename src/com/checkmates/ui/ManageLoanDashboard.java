@@ -110,16 +110,17 @@ public class ManageLoanDashboard extends JFrame {
         // Buttons
         JPanel buttonContainer = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
         buttonContainer.setBackground(Color.WHITE);
-
-        FancyHoverButton2 exportButton = new FancyHoverButton2("Export to PDF");
-        exportButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        exportButton.addActionListener(e -> exportTableToPDF());
-        buttonContainer.add(exportButton);
         
         FancyHoverButton closeButton = new FancyHoverButton("Close");
         closeButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
         closeButton.addActionListener(e -> dispose());
         buttonContainer.add(closeButton);
+        
+        FancyHoverButton checkInButton = new FancyHoverButton("Check In Selected");
+        checkInButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        checkInButton.addActionListener(e -> checkInSelectedBook());
+        buttonContainer.add(checkInButton);
+
 
         bottomPanel.add(searchPanel, BorderLayout.NORTH);
         bottomPanel.add(buttonContainer, BorderLayout.SOUTH);
@@ -153,16 +154,18 @@ public class ManageLoanDashboard extends JFrame {
             if ("success".equalsIgnoreCase(json.optString("status"))) {
                 JSONArray recordsArray = json.getJSONArray("loans");
                 
-                // Updated Columns to include "Borrower Name" (Bname) from your PHP
-                String[] columnNames = {"No.", "Isbn", "Card ID", "Date Out", "Due Date", "Date In", "Lib ID OUT", "Lib ID IN"};
+                // Define visible columns + one hidden column at the end
+                String[] columnNames = {"No.", "Isbn", "Card ID", "Borrower", "Date Out", "Due Date", "Date In", "Lib ID OUT", "Lib ID IN", "Hidden_Loan_ID"};
                 
                 ArrayList<String[]> rowData = new ArrayList<>();
                 for (int i = 0; i < recordsArray.length(); i++) {
                     String displayNo = String.valueOf(i + 1);
                     JSONObject obj = recordsArray.getJSONObject(i);
                     
+                    String loanId = obj.optString("Loan_id"); // Get the actual Loan ID
                     String isbn = obj.optString("Isbn");
                     String cId = obj.optString("Card_id");
+                    String bName = obj.optString("Bname");
                     String dateOut = obj.optString("Date_out");
                     String dueDate = obj.optString("Due_date");
                     String dateIn = obj.optString("Date_in");
@@ -173,8 +176,8 @@ public class ManageLoanDashboard extends JFrame {
                     String libIn = obj.optString("lib_id_return");
                     if(libIn == null || libIn.equals("null")) libIn = "---";
 
-                    // Add ALL fields to the row
-                    rowData.add(new String[]{displayNo, isbn, cId, dateOut, dueDate, dateIn, libOut, libIn});
+                    // Add Loan ID as the LAST element
+                    rowData.add(new String[]{displayNo, isbn, cId, bName, dateOut, dueDate, dateIn, libOut, libIn, loanId});
                 }
 
                 String[][] data = rowData.toArray(new String[0][]);
@@ -186,8 +189,14 @@ public class ManageLoanDashboard extends JFrame {
                     };
                     recordsTable.setModel(model);
                     
+                    // --- HIDE THE LAST COLUMN (Loan ID) ---
+                    // Remove it from the view, but it stays in the model
+                    recordsTable.removeColumn(recordsTable.getColumnModel().getColumn(9)); 
+                    // --------------------------------------
+
                     DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-                    centerRenderer.setHorizontalAlignment(SwingConstants.LEFT);
+                    centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+                    // Apply renderer only to visible columns
                     for (int i = 0; i < recordsTable.getColumnCount(); i++) {
                         recordsTable.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
                     }
@@ -272,48 +281,139 @@ public class ManageLoanDashboard extends JFrame {
         return button;
     }
 
-    private void exportTableToPDF() {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Save Loan History PDF");
-        int userSelection = fileChooser.showSaveDialog(this);
-        if (userSelection == JFileChooser.APPROVE_OPTION) {
-            File fileToSave = fileChooser.getSelectedFile();
-            if (!fileToSave.getName().toLowerCase().endsWith(".pdf")) {
-                fileToSave = new File(fileToSave.getParentFile(), fileToSave.getName() + ".pdf");
-            }
-            try {
-                Document document = new Document();
-                PdfWriter.getInstance(document, new FileOutputStream(fileToSave));
-                document.open();
+    private void checkInSelectedBook() {
+        int[] selectedRows = recordsTable.getSelectedRows();
+        if (selectedRows.length == 0) {
+            JOptionPane.showMessageDialog(this, "Please select at least one loan to check in.");
+            return;
+        }
+        
+        int confirm = JOptionPane.showConfirmDialog(this, 
+                "Check in " + selectedRows.length + " book(s)?", 
+                "Confirm Check In", JOptionPane.YES_NO_OPTION);
+        
+        if (confirm == JOptionPane.YES_OPTION) {
+             for (int row : selectedRows) {
+                 int modelRow = recordsTable.convertRowIndexToModel(row);
+                 String loanId = (String) recordsTable.getModel().getValueAt(modelRow, 9); 
 
-                PdfPTable pdfTable = new PdfPTable(recordsTable.getColumnCount());
-                PdfPCell headerCell = new PdfPCell(new Phrase("Loan History Report"));
-                headerCell.setColspan(recordsTable.getColumnCount());
-                headerCell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-                pdfTable.addCell(headerCell);
-
-                for (int i = 0; i < recordsTable.getColumnCount(); i++) {
-                    pdfTable.addCell(new Phrase(recordsTable.getColumnName(i)));
-                }
-
-                for (int rowIndex = 0; rowIndex < recordsTable.getRowCount(); rowIndex++) {
-                    int modelRow = recordsTable.convertRowIndexToModel(rowIndex);
-                    for (int col = 0; col < recordsTable.getColumnCount(); col++) {
-                        Object val = recordsTable.getModel().getValueAt(modelRow, col);
-                        pdfTable.addCell(new Phrase(val == null ? "" : val.toString()));
-                    }
-                }
-
-                document.add(pdfTable);
-                document.close();
-                JOptionPane.showMessageDialog(this, "PDF exported successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(this, "Error exporting PDF: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            }
+                 sendCheckIn(loanId);
+             }
         }
     }
+    private void sendCheckIn(String loanId) {
+        new Thread(() -> {
+            try {
+                // CHANGED: Point to a check-in script, not addBook
+                String urlString = "http://cm8tes.com/CS4347_Project_Folder/checkIn.php"; 
+                
+                // Send the loan_id
+                String params = "Loan_id=" + URLEncoder.encode(loanId, "UTF-8");
+
+                // 1. Send Request and GET THE RESPONSE STRING
+                String response = postDataWithResponse(urlString, params);
+                
+                //System.out.println(response);
+                
+                // 2. Parse JSON
+                JSONObject json = new JSONObject(response);
+                String status = json.optString("status");
+                String message = json.optString("message");
+
+                // 3. Update UI on Event Dispatch Thread
+                SwingUtilities.invokeLater(() -> {
+                    if ("success".equalsIgnoreCase(status)) {
+                        showModernDialog("Success", "Book checked in successfully!", true);
+                        loadLoanHistory(); // Refresh table to show the new "Date In"
+                    } else {
+                        showModernDialog("Error", message, false);
+                    }
+                });
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                SwingUtilities.invokeLater(() -> 
+                    showModernDialog("Connection Error", e.getMessage(), false));
+            }
+        }).start();
+    }    
+    private void showModernDialog(String title, String message, boolean isSuccess) {
+        JDialog dialog = new JDialog(this, title, true); // Modal dialog
+        dialog.setUndecorated(true); // Remove standard window borders for modern look
+        dialog.setSize(400, 200);
+        dialog.setLocationRelativeTo(this);
+
+        // Main Panel with Border
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(Color.WHITE);
+        // Add a subtle border (Green for success, Red for error)
+        Color borderColor = isSuccess ? new Color(76, 175, 80) : new Color(220, 53, 69);
+        panel.setBorder(BorderFactory.createLineBorder(borderColor, 2));
+
+        // --- Header ---
+        JLabel headerLabel = new JLabel(isSuccess ? "✔ Success" : "⚠ Error");
+        headerLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        headerLabel.setForeground(borderColor);
+        headerLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        headerLabel.setBorder(BorderFactory.createEmptyBorder(20, 10, 10, 10));
+        panel.add(headerLabel, BorderLayout.NORTH);
+
+        // --- Message Body ---
+        // Use HTML for automatic text wrapping
+        JLabel msgLabel = new JLabel("<html><div style='text-align: center;'>" + message + "</div></html>");
+        msgLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        msgLabel.setForeground(new Color(60, 60, 60));
+        msgLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        msgLabel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
+        panel.add(msgLabel, BorderLayout.CENTER);
+
+        // --- Button Panel ---
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        btnPanel.setBackground(Color.WHITE);
+        btnPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
+
+        // Reuse your FancyHoverButton
+        FancyHoverButton okButton = new FancyHoverButton("OK");
+        okButton.setPreferredSize(new Dimension(100, 40));
+        okButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        
+        // Add Enter key support to close dialog
+        dialog.getRootPane().setDefaultButton(okButton);
+        okButton.addActionListener(e -> dialog.dispose());
+
+        btnPanel.add(okButton);
+        panel.add(btnPanel, BorderLayout.SOUTH);
+
+        dialog.add(panel);
+        dialog.setVisible(true);
+    }
+    
+    private String postDataWithResponse(String urlString, String params) throws Exception {
+        URL url = new URL(urlString);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        conn.setDoOutput(true);
+        
+        // Write parameters (loan_id) to the request body
+        try (OutputStream os = conn.getOutputStream()) {
+            byte[] input = params.getBytes(StandardCharsets.UTF_8);
+            os.write(input, 0, input.length);
+        }
+
+        // Read the response from PHP
+        StringBuilder response = new StringBuilder();
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                response.append(line);
+            }
+        }
+        
+        return response.toString();
+    }
+
+  
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new ManageLoanDashboard().setVisible(true));

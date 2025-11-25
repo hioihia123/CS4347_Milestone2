@@ -1,5 +1,6 @@
 package com.checkmates.ui;
 
+import com.checkmates.model.Librarian;
 import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
@@ -30,6 +31,7 @@ public class ManageLoanDashboard extends JFrame {
     private JTable recordsTable;
     private JTextField searchField;
     private TableRowSorter<TableModel> rowSorter;
+    private Librarian lib;
 
     // Modern style properties
     private Color modernTextColor = new Color(60, 60, 60);
@@ -39,8 +41,8 @@ public class ManageLoanDashboard extends JFrame {
     private Color modernPanelColor = new Color(240, 240, 240);
     private Color modernHighlightColor = new Color(200, 220, 255);
 
-    public ManageLoanDashboard() {
-        
+    public ManageLoanDashboard(Librarian libObj) {
+        this.lib = libObj;
         setTitle("Loan History for " + borrowerName);
         setSize(1100, 700); // Made wider for extra column
         setLocationRelativeTo(null);
@@ -297,18 +299,19 @@ public class ManageLoanDashboard extends JFrame {
                  int modelRow = recordsTable.convertRowIndexToModel(row);
                  String loanId = (String) recordsTable.getModel().getValueAt(modelRow, 9); 
 
-                 sendCheckIn(loanId);
+                 sendCheckIn(loanId, lib.getLibID());
              }
         }
     }
-    private void sendCheckIn(String loanId) {
+    private void sendCheckIn(String loanId, String libId) {
         new Thread(() -> {
             try {
                 // CHANGED: Point to a check-in script, not addBook
                 String urlString = "http://cm8tes.com/CS4347_Project_Folder/checkIn.php"; 
                 
                 // Send the loan_id
-                String params = "Loan_id=" + URLEncoder.encode(loanId, "UTF-8");
+                String params = "Loan_id=" + URLEncoder.encode(loanId, "UTF-8") 
+                              + "&lib_id_return=" + URLEncoder.encode(libId, "UTF-8");
 
                 // 1. Send Request and GET THE RESPONSE STRING
                 String response = postDataWithResponse(urlString, params);
@@ -416,6 +419,7 @@ public class ManageLoanDashboard extends JFrame {
   
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new ManageLoanDashboard().setVisible(true));
+        Librarian dummy = new Librarian("Test Lib", "test@test.com", "L001");
+        SwingUtilities.invokeLater(() -> new ManageLoanDashboard(dummy).setVisible(true));
     }
 }

@@ -149,7 +149,7 @@ public class ManageBooksDashboard extends JFrame {
         
         FancyHoverButton2 checkinButton = new FancyHoverButton2("Checkin Book");
         checkinButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        checkinButton.addActionListener(e -> new ManageLoanDashboard().setVisible(true));
+        checkinButton.addActionListener(e -> new ManageLoanDashboard(lib).setVisible(true));
         buttonPanel.add(checkinButton);
 
         FancyHoverButton refreshButton = new FancyHoverButton("\u27F3");
@@ -594,7 +594,7 @@ public class ManageBooksDashboard extends JFrame {
                 return;
             }
 
-            sendToCheckout(isbn, borrowerId, lib.getLibID()); // Create this PHP
+            sendToCheckout(isbn, borrowerId, lib.getLibID());
 
             dialog.dispose();
         });

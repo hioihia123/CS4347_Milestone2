@@ -122,6 +122,14 @@ public class ManageLoanDashboard extends JFrame {
         checkInButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
         checkInButton.addActionListener(e -> checkInSelectedBook());
         buttonContainer.add(checkInButton);
+        
+        FancyHoverButton2 finesButton = new FancyHoverButton2("Manage Fines");
+        finesButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        finesButton.addActionListener(e -> {
+            ManageFinesDashboard finesDash = new ManageFinesDashboard(lib);
+            finesDash.setVisible(true);
+        });
+        buttonContainer.add(finesButton);
 
 
         bottomPanel.add(searchPanel, BorderLayout.NORTH);

@@ -123,8 +123,8 @@ public class ManageBorrowersDashboard extends JFrame {
         FancyHoverButton2 finesButton = new FancyHoverButton2("Add Borrowers");
         finesButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
         finesButton.addActionListener(e -> {
-            ManageFinesDashboard finesDash = new ManageFinesDashboard(lib);
-            finesDash.setVisible(true);
+            ManageBorrowerDashboard bDash = new ManageBorrowerDashboard(lib);
+            bDash.setVisible(true);
         });
         buttonContainer.add(finesButton);
 

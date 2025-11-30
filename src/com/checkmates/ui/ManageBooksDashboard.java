@@ -142,10 +142,15 @@ public class ManageBooksDashboard extends JFrame {
         deleteButton.addActionListener(e -> deleteSelectedBook());
         buttonPanel.add(deleteButton);
         
-        FancyHoverButton2 checkoutButton = new FancyHoverButton2("Checkout Book");
+        FancyHoverButton2 checkoutButton = new FancyHoverButton2("Mannually Checkout");
         checkoutButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
         checkoutButton.addActionListener(e -> checkoutBook());
         buttonPanel.add(checkoutButton);
+        
+        FancyHoverButton2 selectedCheckout = new FancyHoverButton2("Selected Checkout");
+        selectedCheckout.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        selectedCheckout.addActionListener(e -> checkoutSelectedBook());
+        buttonPanel.add(selectedCheckout);
         
         FancyHoverButton2 checkinButton = new FancyHoverButton2("Checkin Book");
         checkinButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
@@ -599,6 +604,80 @@ public class ManageBooksDashboard extends JFrame {
 
             sendToCheckout(isbn, borrowerId, lib.getLibID());
 
+            dialog.dispose();
+        });
+
+        dialog.add(panel);
+        dialog.setVisible(true);
+    }
+    private void checkoutSelectedBook() {
+        // 1. Check if a row is selected
+        int row = booksTable.getSelectedRow();
+        if (row == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a book from the table first.");
+            return;
+        }
+
+        // 2. Extract Data from Table
+        // Note: rowSorter might change indices, so we map it to the model if needed, 
+        // but getValueAt usually handles view indices correctly in simple setups.
+        String isbn = (String) booksTable.getValueAt(row, 0); 
+        String title = (String) booksTable.getValueAt(row, 1);
+        String availability = (String) booksTable.getValueAt(row, 3);
+
+        // 3. Prevent checking out if already OUT
+        if ("OUT".equalsIgnoreCase(availability)) {
+            showModernDialog("Unavailable", "This book is already checked out.", false);
+            return;
+        }
+
+        // 4. Create the Dialog
+        JDialog dialog = new JDialog(this, "Checkout Selected Book", true);
+        dialog.setSize(450, 300);
+        dialog.setLocationRelativeTo(this);
+        
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(Color.WHITE);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        
+        // Form Fields
+        JTextField isbnField = new JTextField(20);
+        isbnField.setText(isbn);
+        isbnField.setEditable(false); // Lock ISBN so user can't change it
+        isbnField.setBackground(new Color(245, 245, 245)); // Grey out to indicate read-only
+        
+        JTextField borrowerIdField = new JTextField(20); // The only thing user needs to type
+
+        // Add rows using your helper method
+        addFormRow(panel, gbc, 0, "Selected ISBN:", isbnField);
+        // Display title just for confirmation
+        JLabel titleDisplay = new JLabel("<html><b>" + title + "</b></html>");
+        titleDisplay.setFont(modernFont);
+        
+        gbc.gridx = 0; gbc.gridy = 1; 
+        panel.add(new JLabel("Book Title:"), gbc);
+        gbc.gridx = 1; 
+        panel.add(titleDisplay, gbc);
+
+        addFormRow(panel, gbc, 2, "Borrower Card ID:", borrowerIdField);
+
+        JButton confirmButton = createModernButton("Confirm Checkout");
+        gbc.gridx = 1; gbc.gridy = 3;
+        panel.add(confirmButton, gbc);
+
+        // 5. Action Listener
+        confirmButton.addActionListener(e -> {
+            String bId = borrowerIdField.getText().trim();
+
+            if (bId.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Please enter a Borrower Card ID.");
+                return;
+            }
+
+            // Reuse your existing networking method
+            sendToCheckout(isbn, bId, lib.getLibID());
             dialog.dispose();
         });
 

@@ -194,7 +194,7 @@ public class ManageFinesDashboard extends JFrame {
                     finesTable.removeColumn(finesTable.getColumnModel().getColumn(4));
 
                     DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-                    centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+                    centerRenderer.setHorizontalAlignment(SwingConstants.LEFT);
                     for (int i = 0; i < finesTable.getColumnCount(); i++) {
                         finesTable.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
                     }

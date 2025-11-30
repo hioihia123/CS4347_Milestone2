@@ -276,7 +276,16 @@ public class Dashboard extends javax.swing.JFrame {
 
   
 
-
+        //create a "Saki" button for Saki AI Agent
+        FancyHoverButton borrowersButton = new FancyHoverButton("Borrowers");
+        borrowersButton.setFont(new Font ("Helvetica Neueu", Font.BOLD, 24));
+        borrowersButton.setPreferredSize(new Dimension(180,50));
+        borrowersButton.setMaximumSize(new Dimension(180,50));
+        borrowersButton.addActionListener(e -> {
+            ManageBorrowersDashboard borDash = new ManageBorrowersDashboard(librarian);
+            borDash.setVisible(true);
+        });
+        
         //create a "Saki" button for Saki AI Agent
         FancyHoverButton AIbutton = new FancyHoverButton("Saki");
         AIbutton.setFont(new Font ("Helvetica Neueu", Font.BOLD, 24));
@@ -292,14 +301,21 @@ public class Dashboard extends javax.swing.JFrame {
         emailButton.setPreferredSize(new Dimension(180,50));
         emailButton.setMaximumSize(new Dimension(180, 50));
         emailButton.addActionListener(e -> sendEmail(librarian.getLibID()));
+        
+         
 
         // Add spacing before adding the additional button
+        
+        additionalButtonsPanel.add(Box.createHorizontalStrut(20));
+        additionalButtonsPanel.add(borrowersButton);
        
         additionalButtonsPanel.add(Box.createHorizontalStrut(20));
         additionalButtonsPanel.add(AIbutton);
         
         additionalButtonsPanel.add(Box.createHorizontalStrut(20));
         additionalButtonsPanel.add(emailButton);
+        
+      
 
         // Then, add the additionalButtonsPanel to the main button panel that already contains the Create Class button.
         buttonPanel.add(additionalButtonsPanel);

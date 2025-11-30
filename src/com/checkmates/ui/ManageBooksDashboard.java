@@ -20,7 +20,7 @@ import javax.swing.RowFilter;
 import com.checkmates.model.Librarian;
 import com.checkmates.ui.components.FancyHoverButton;
 import com.checkmates.ui.components.FancyHoverButton2;
-import com.checkmates.ui.ManageLoanDashboard;
+import com.checkmates.ui.ManageBorrowersDashboard;
 
 
 import com.formdev.flatlaf.FlatLightLaf;
@@ -149,7 +149,10 @@ public class ManageBooksDashboard extends JFrame {
         
         FancyHoverButton2 checkinButton = new FancyHoverButton2("Checkin Book");
         checkinButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        checkinButton.addActionListener(e -> new ManageLoanDashboard(lib).setVisible(true));
+        checkinButton.addActionListener(e -> {
+            ManageLoanDashboard loanDash = new ManageLoanDashboard(lib);
+            loanDash.setVisible(true);
+        });
         buttonPanel.add(checkinButton);
 
         FancyHoverButton refreshButton = new FancyHoverButton("\u27F3");

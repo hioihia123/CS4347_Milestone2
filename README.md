@@ -1,3 +1,4 @@
+COMPLETELY FINISHED - DECEMBER 1- 5:52PM
 CS4347 Project - Team Iridium
 Library Management System (BookBuddy)
 Github link: https://github.com/hioihia123/CS4347_Milestone2
